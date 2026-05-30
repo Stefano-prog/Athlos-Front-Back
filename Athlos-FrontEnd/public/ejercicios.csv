@@ -1,0 +1,11 @@
+id,nombre,grupo_muscular,objetivo,ambiente,dificultad,descripcion,series,repeticiones,instrucciones
+1,Flexiones de Pecho (Lagartijas),Pecho y Tríceps,bajar_peso,casa,Principiante,Ejercicio de empuje básico utilizando el peso corporal.,3,10-12,Mantén el cuerpo recto y baja el pecho casi hasta tocar el suelo.
+2,Sentadillas Libres,Cuádriceps y Glúteos,mantener_peso,casa,Principiante,Ejercicio fundamental para el tren inferior.,4,15,Baja las caderas como si te sentaras en una silla manteniendo la espalda recta.
+3,Press de Banca con Barra,Pecho y Tríceps,ganar_musculo,gimnasio,Intermedio,Ejercicio de fuerza clásico para hipertrofia de empuje pectoral.,4,8-10,Acostado en banco plano empuja la barra verticalmente con control.
+4,Zancadas (Lunges),Piernas y Glúteos,bajar_peso,aire_libre,Principiante,Ejercicio unilateral dinámico para piernas y glúteos.,3,12 por pierna,Da un paso adelante y baja la rodilla trasera casi rozando el suelo.
+5,Peso Muerto con Barra,Cadena Posterior (Espalda/Glúteos),ganar_musculo,gimnasio,Avanzado,Ejercicio compuesto de tracción y fuerza máxima.,4,6-8,Levanta la barra manteniendo la columna neutral y empujando las caderas.
+6,Dominadas (Pull-ups),Espalda y Bíceps,ganar_musculo,aire_libre,Intermedio,Ejercicio de tracción con peso corporal.,4,8,Cuelga de la barra y elévate hasta que tu barbilla pase la barra.
+7,Plancha Abdominal,Core,mantener_peso,casa,Principiante,Ejercicio isométrico de estabilización central.,3,30-60 segundos,Apoya antebrazos y puntas de pies manteniendo el cuerpo alineado.
+8,Burpees,Cardio Cuerpo Completo,bajar_peso,casa,Intermedio,Ejercicio cardiovascular de alta intensidad.,4,12,Haz una flexión salta y da una palmada arriba de forma fluida.
+9,Prensa de Piernas,Cuádriceps y Glúteos,ganar_musculo,gimnasio,Intermedio,Ejercicio de empuje de piernas asistido en máquina.,4,10-12,Empuja la plataforma con las piernas sin bloquear las rodillas al final.
+10,Fondos de Tríceps en Paralelas,Tríceps y Hombros,ganar_musculo,aire_libre,Intermedio,Ejercicio de empuje vertical en paralelas.,3,10,Baja doblando los codos a 90 grados y vuelve a subir extendiendo los brazos.
