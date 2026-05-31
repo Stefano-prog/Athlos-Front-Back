@@ -38,14 +38,21 @@ export const register = async (req: Request, res: Response) => {
         const codigo = generateVerificationCode();
         verificationCodes.set(email, codigo);
 
-        await sendVerificationCode(email, codigo);
+try {
+            await sendVerificationCode(email, codigo);
+        } catch (emailError) {
+            console.error("Error enviando email:", emailError);
+            // Si falla el email, continuamos igual y mostramos el código en pantalla
+        }
 
         return res.status(201).json({
-        success: true,
-        message: "Usuario creado correctamente. Revisa tu correo para verificar tu cuenta.",
+            success: true,
+            message: "Usuario creado. Revisa tu correo para verificar tu cuenta.",
+            codigoSimulado: codigo,
         });
     } catch (error) {
-        return res.status(500).json({ success: false, message: "Error interno del servidor." });
+        console.error("Error en register:", error);
+        return res.status(500).json({ success: false, message: (error as any).message || "Error interno del servidor." });
     }
 };
 

@@ -12,14 +12,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/nodemailer": "^8.0.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mailersend": "^3.0.0",
+    "mailsender": "^1.1.2",
+    "nodemailer": "^8.0.10",
     "pg": "^8.21.0",
-    "postgres": "^3.4.9"
+    "postgres": "^3.4.9",
+    "resend": "^6.12.4"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
