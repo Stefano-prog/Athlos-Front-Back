@@ -5,6 +5,7 @@ import './config/db';
 
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
+import chatRoutes from './routes/chat.routes';
 import { authMiddleware } from './middlewares/auth.middleware';
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.get('/', (_req, res) => {
 
 // Rutas públicas (sin JWT)
 app.use('/api/auth', authRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Rutas privadas (con JWT)
 app.use('/api/user', authMiddleware, userRoutes);
