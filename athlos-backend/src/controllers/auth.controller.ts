@@ -97,13 +97,17 @@ export const login = async (req: Request, res: Response) => {
         );
 
         if (result.rowCount === 0) {
-            return res.status(401).json({ success: false, message: "Credenciales incorrectas." });
+            return res.status(401).json({ 
+                success: false, 
+                message: "Credenciales incorrectas." });
         }
 
         const user = result.rows[0];
         const passwordValida = await comparePassword(password, user.contraseñahash);
         if (!passwordValida) {
-            return res.status(401).json({ success: false, message: "Credenciales incorrectas." });
+            return res.status(401).json({ 
+                success: false, 
+                message: "Credenciales incorrectas." });
         }
 
         const token = generateToken(user.idusuario);
@@ -113,7 +117,9 @@ export const login = async (req: Request, res: Response) => {
             data: { token, user: { id: user.idusuario, nombre: user.nombre, email: user.email } }
         });
     } catch (error) {
-        return res.status(500).json({ success: false, message: "Error interno del servidor." });
+        return res.status(500).json({ 
+            success: false, 
+            message: "Error interno del servidor." });
     }
 };
 
@@ -122,7 +128,9 @@ export const forgotPassword = async (req: Request, res: Response) => {
     try {
         const { email } = req.body;
         if (!email) {
-            return res.status(400).json({ success: false, message: "El correo es requerido." });
+            return res.status(400).json({ 
+                success: false, 
+                message: "El correo es requerido." });
         }
 
         // Verificar que el usuario existe
