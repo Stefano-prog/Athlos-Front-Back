@@ -26,3 +26,23 @@ export const sendVerificationCode = async (to: string, code: string) => {
     text: `Tu código de verificación de Athlos es: ${code}`,
   });
 };
+
+export const sendPasswordResetCode = async (to: string, code: string) => {
+  await transporter.sendMail({
+    from: `"Athlos" <${process.env.GMAIL_USER}>`,
+    to,
+    subject: "Recuperación de contraseña - Athlos",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
+        <h2 style="color: #1a1a2e; margin-bottom: 8px;">🔐 Recupera tu contraseña</h2>
+        <p style="color: #555; font-size: 15px;">Recibimos una solicitud para restablecer la contraseña de tu cuenta en <strong>Athlos</strong>.</p>
+        <p style="color: #555; font-size: 15px;">Tu código de recuperación es:</p>
+        <div style="background: #1a1a2e; color: #fff; font-size: 36px; font-weight: bold; letter-spacing: 8px; text-align: center; padding: 20px; border-radius: 8px; margin: 24px 0;">
+          ${code}
+        </div>
+        <p style="color: #888; font-size: 13px;">Este código expira en <strong>10 minutos</strong>. Si no solicitaste este cambio, ignora este correo — tu contraseña no cambiará.</p>
+      </div>
+    `,
+    text: `Tu código de recuperación de contraseña de Athlos es: ${code}. Expira en 10 minutos.`,
+  });
+};

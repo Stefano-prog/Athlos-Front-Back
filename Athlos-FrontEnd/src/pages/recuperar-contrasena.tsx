@@ -1,34 +1,93 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+type Step = "email" | "codigo" | "password" | "exito";
+
 const RecuperarContrasena = () => {
     const navigate = useNavigate();
-    const [correo, setCorreo] = useState<string>("");
-    const [nuevaPassword, setNuevaPassword] = useState<string>("");
-    const [confirmNuevaPassword, setConfirmNuevaPassword] = useState<string>("");
 
-    const [error, setError] = useState<string>("");
-    const [enlaceEnviado, setEnlaceEnviado] = useState<boolean>(false);
-    const [contrasenaActualizada, setContrasenaActualizada] = useState<boolean>(false);
+    const [step, setStep] = useState<Step>("email");
+    const [correo, setCorreo] = useState("");
+    const [codigo, setCodigo] = useState("");
+    const [nuevaPassword, setNuevaPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleCorreoChange = (e: React.ChangeEvent<HTMLInputElement>) => setCorreo(e.currentTarget.value);
-    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => setNuevaPassword(e.currentTarget.value);
-    const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => setConfirmNuevaPassword(e.currentTarget.value);
-
-    const handleRequestSubmit = (e: React.FormEvent) => {
+    // Paso 1: solicitar código
+    const handleSolicitarCodigo = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
         if (!correo) { setError("Por favor, ingrese su correo electrónico."); return; }
-        setEnlaceEnviado(true);
+        setLoading(true);
+        try {
+            const res = await fetch("http://localhost:3000/api/auth/forgot-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: correo }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setStep("codigo");
+            } else {
+                setError(data.message || "Error al enviar el código.");
+            }
+        } catch {
+            setError("No se pudo conectar con el servidor.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleResetSubmit = (e: React.FormEvent) => {
+    // Paso 2: verificar código
+    const handleVerificarCodigo = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
-        if (!nuevaPassword || !confirmNuevaPassword) { setError("Por favor, complete ambos campos de contraseña."); return; }
-        if (nuevaPassword.length < 6) { setError("La nueva contraseña debe tener al menos 6 caracteres."); return; }
-        if (nuevaPassword !== confirmNuevaPassword) { setError("Las contraseñas ingresadas no coinciden."); return; }
-        setContrasenaActualizada(true);
+        if (codigo.length !== 6) { setError("El código debe tener 6 dígitos."); return; }
+        setLoading(true);
+        try {
+            const res = await fetch("http://localhost:3000/api/auth/verify-reset-code", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: correo, codigo }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setStep("password");
+            } else {
+                setError(data.message || "Código incorrecto.");
+            }
+        } catch {
+            setError("No se pudo conectar con el servidor.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Paso 3: nueva contraseña
+    const handleResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+        if (nuevaPassword.length < 6) { setError("La contraseña debe tener al menos 6 caracteres."); return; }
+        if (nuevaPassword !== confirmPassword) { setError("Las contraseñas no coinciden."); return; }
+        setLoading(true);
+        try {
+            const res = await fetch("http://localhost:3000/api/auth/reset-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: correo, codigo, nuevaPassword }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setStep("exito");
+            } else {
+                setError(data.message || "Error al actualizar la contraseña.");
+            }
+        } catch {
+            setError("No se pudo conectar con el servidor.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -44,14 +103,15 @@ const RecuperarContrasena = () => {
             </div>
 
             <div className="glass-card">
-                {!enlaceEnviado ? (
+
+                {/* PASO 1: Ingresar correo */}
+                {step === "email" && (
                     <>
                         <h4 className="fw-bold mb-1 text-start card-title">Recuperar cuenta</h4>
                         <p className="text-start mb-4 card-subtitle">
-                            Ingrese su correo registrado para recibir un enlace de restablecimiento.
+                            Ingrese su correo registrado y le enviaremos un código de verificación.
                         </p>
-
-                        <form onSubmit={handleRequestSubmit}>
+                        <form onSubmit={handleSolicitarCodigo}>
                             <div className="mb-4 text-start">
                                 <label className="form-label fw-semibold text-label">Correo Electrónico</label>
                                 <div className="input-group">
@@ -65,46 +125,78 @@ const RecuperarContrasena = () => {
                                         type="email"
                                         placeholder="nombre@correo.com"
                                         value={correo}
-                                        onChange={handleCorreoChange}
+                                        onChange={e => setCorreo(e.target.value)}
                                         required
                                     />
                                 </div>
                             </div>
-
                             {error && <div className="alert-glass-error mb-3 text-start">{error}</div>}
-
                             <div className="d-grid mb-3 mt-4">
-                                <button className="btn glass-btn-accent py-2" type="submit">Enviar Enlace</button>
+                                <button className="btn glass-btn-accent py-2" type="submit" disabled={loading}>
+                                    {loading ? "Enviando..." : "Enviar Código"}
+                                </button>
                             </div>
-
                             <div className="text-center mt-3">
                                 <a href="#" className="link-teal" style={{ fontSize: "0.85rem" }}
-                                    onClick={(e) => { e.preventDefault(); navigate("/"); }}>
+                                    onClick={e => { e.preventDefault(); navigate("/"); }}>
                                     Volver al Inicio de Sesión
                                 </a>
                             </div>
                         </form>
                     </>
-                ) : !contrasenaActualizada ? (
+                )}
+
+                {/* PASO 2: Ingresar código */}
+                {step === "codigo" && (
                     <div className="text-start">
                         <div className="success-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="#28A745" viewBox="0 0 16 16">
-                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+                                <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1zm13 2.383-4.708 2.825L15 11.105zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741M1 11.105l4.708-2.897L1 5.383z" />
                             </svg>
                         </div>
-                        <h4 className="fw-bold mb-2 card-title">Enlace enviado</h4>
-                        <p style={{ color: "rgba(255, 255, 255, 0.75)", fontSize: "0.85rem", lineHeight: "1.5" }}>
-                            Enlace enviado. Revisa tu correo para reestablecer tu contraseña.
+                        <h4 className="fw-bold mb-2 card-title">Código enviado</h4>
+                        <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.85rem", lineHeight: "1.5" }}>
+                            Revisa tu correo <strong>{correo}</strong> e ingresa el código de 6 dígitos.
                         </p>
+                        <form onSubmit={handleVerificarCodigo} className="mt-4">
+                            <div className="mb-3">
+                                <label className="form-label fw-semibold text-label">Código de verificación</label>
+                                <input
+                                    className="form-control glass-input text-center"
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={6}
+                                    placeholder="123456"
+                                    value={codigo}
+                                    onChange={e => setCodigo(e.target.value.replace(/\D/g, ""))}
+                                    style={{ fontSize: "1.5rem", letterSpacing: "6px" }}
+                                    required
+                                />
+                            </div>
+                            {error && <div className="alert-glass-error mb-3">{error}</div>}
+                            <div className="d-grid mb-2">
+                                <button className="btn glass-btn-accent py-2" type="submit" disabled={loading}>
+                                    {loading ? "Verificando..." : "Verificar Código"}
+                                </button>
+                            </div>
+                            <div className="text-center mt-2">
+                                <a href="#" className="link-teal" style={{ fontSize: "0.82rem" }}
+                                    onClick={e => { e.preventDefault(); setStep("email"); setError(""); }}>
+                                    ← Cambiar correo
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                )}
 
-                        <div className="alert-glass-info my-3">
-                            <small className="d-block fw-semibold mb-1 text-teal">[Simulador de Correo Electrónico]</small>
-                            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.78rem" }}>
-                                Hemos simulado la recepción del correo de recuperación de contraseña para el perfil de {correo}.
-                            </span>
-                        </div>
-
-                        <form onSubmit={handleResetSubmit} className="mt-4">
+                {/* PASO 3: Nueva contraseña */}
+                {step === "password" && (
+                    <div className="text-start">
+                        <h4 className="fw-bold mb-2 card-title">Nueva contraseña</h4>
+                        <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.85rem" }}>
+                            Elige una nueva contraseña segura para tu cuenta.
+                        </p>
+                        <form onSubmit={handleResetPassword} className="mt-4">
                             <div className="mb-3">
                                 <label className="form-label fw-semibold text-label">Nueva Contraseña</label>
                                 <div className="input-group">
@@ -113,39 +205,43 @@ const RecuperarContrasena = () => {
                                             <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2M5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1" />
                                         </svg>
                                     </span>
-                                    <input className="form-control glass-input" type="password" placeholder="Mínimo 6 caracteres" value={nuevaPassword} onChange={handlePasswordChange} required />
+                                    <input className="form-control glass-input" type="password" placeholder="Mínimo 6 caracteres"
+                                        value={nuevaPassword} onChange={e => setNuevaPassword(e.target.value)} required />
                                 </div>
                             </div>
-
                             <div className="mb-3">
-                                <label className="form-label fw-semibold text-label">Confirmar Nueva Contraseña</label>
+                                <label className="form-label fw-semibold text-label">Confirmar Contraseña</label>
                                 <div className="input-group">
                                     <span className="input-group-text glass-input-group-text">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                                             <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2M5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1" />
                                         </svg>
                                     </span>
-                                    <input className="form-control glass-input" type="password" placeholder="Repita su nueva contraseña" value={confirmNuevaPassword} onChange={handleConfirmPasswordChange} required />
+                                    <input className="form-control glass-input" type="password" placeholder="Repita su nueva contraseña"
+                                        value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
                                 </div>
                             </div>
-
                             {error && <div className="alert-glass-error mb-3">{error}</div>}
-
                             <div className="d-grid mb-2">
-                                <button className="btn glass-btn-primary py-2" type="submit">Actualizar Contraseña</button>
+                                <button className="btn glass-btn-primary py-2" type="submit" disabled={loading}>
+                                    {loading ? "Actualizando..." : "Actualizar Contraseña"}
+                                </button>
                             </div>
                         </form>
                     </div>
-                ) : (
+                )}
+
+                {/* PASO FINAL: Éxito */}
+                {step === "exito" && (
                     <div className="text-start">
                         <div className="success-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="#28A745" viewBox="0 0 16 16">
                                 <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
                             </svg>
                         </div>
-                        <h4 className="fw-bold mb-2 card-title">Acceso restablecido</h4>
+                        <h4 className="fw-bold mb-2 card-title">¡Contraseña actualizada!</h4>
                         <p style={{ color: "rgba(255, 255, 255, 0.75)", fontSize: "0.88rem", lineHeight: "1.5" }}>
-                            Contraseña actualizada con éxito.
+                            Tu contraseña fue restablecida con éxito. Ya puedes iniciar sesión con tu nueva contraseña.
                         </p>
                         <div className="d-grid mt-4">
                             <button className="btn glass-btn-primary py-2" onClick={() => navigate("/")}>
@@ -154,9 +250,11 @@ const RecuperarContrasena = () => {
                         </div>
                     </div>
                 )}
+
             </div>
         </div>
     );
 };
 
 export default RecuperarContrasena;
+
