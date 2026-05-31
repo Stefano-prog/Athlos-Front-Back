@@ -216,7 +216,7 @@ const RegistroUsuario = () => {
                                     <a
                                         href="#"
                                         className="link-teal"
-                                        onClick={(e) => { e.preventDefault(); navigate("/Entorno"); }}
+                                        onClick={(e) => { e.preventDefault(); navigate("/"); }}
                                     >
                                         Inicie sesión
                                     </a>
