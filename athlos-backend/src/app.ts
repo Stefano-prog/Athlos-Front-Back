@@ -26,10 +26,10 @@ app.get('/', (_req, res) => {
 // Rutas públicas (sin JWT)
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
-app.use('/api/plans', planRoutes);
 
 // Rutas privadas (con JWT)
 app.use('/api/user', authMiddleware, userRoutes);
+app.use('/api/plans', authMiddleware, planRoutes);
 
 // Arrancar servidor
 app.listen(PORT, () => {

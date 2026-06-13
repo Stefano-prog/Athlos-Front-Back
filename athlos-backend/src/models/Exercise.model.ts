@@ -24,6 +24,23 @@ export const getAllExercise = async (): Promise<IExercise[]> => {
     return result.rows;
 }
 
+// --- RAG: catálogo de ejercicios para generación de planes ---
+
+export interface IExerciseCatalogForPlan {
+    idejercicio: number;
+    nombre: string;
+    descripcion: string | null;
+}
+
+export const getExerciseCatalogForPlan = async (): Promise<IExerciseCatalogForPlan[]> => {
+    const result = await db.query(
+        `SELECT idejercicio, nombre, descripcion
+         FROM ejercicio
+         ORDER BY idejercicio ASC`
+    );
+    return result.rows;
+};
+
 export const getRutinaById = async (id: number): Promise<IExercise> => {
     const result = await db.query(`SELECT 
                                     e.nombre      AS nombre, 

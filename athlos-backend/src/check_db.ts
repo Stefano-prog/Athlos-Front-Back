@@ -9,17 +9,32 @@ async function main() {
         console.log("Tables found:");
         console.log(result.rows);
         
-        // Let's also check user schema details if table exists
-        const userTable = result.rows.find((r: any) => r.table_name === "usuario");
-        if (userTable) {
-            console.log("\nQuerying 'usuario' column info...");
-            const cols = await db.query(
-                `SELECT column_name, data_type, is_nullable 
-                 FROM information_schema.columns 
-                 WHERE table_name = 'usuario';`
-            );
-            console.log(cols.rows);
-        }
+        // Let's check plan schema details
+        console.log("\nQuerying 'plan' column info...");
+        const planCols = await db.query(
+            `SELECT column_name, data_type, is_nullable 
+             FROM information_schema.columns 
+             WHERE table_name = 'plan';`
+        );
+        console.log(planCols.rows);
+
+        // Let's check rutina schema details
+        console.log("\nQuerying 'rutina' column info...");
+        const rutinaCols = await db.query(
+            `SELECT column_name, data_type, is_nullable 
+             FROM information_schema.columns 
+             WHERE table_name = 'rutina';`
+        );
+        console.log(rutinaCols.rows);
+
+        // Let's check rutinaejercicio schema details
+        console.log("\nQuerying 'rutinaejercicio' column info...");
+        const reCols = await db.query(
+            `SELECT column_name, data_type, is_nullable 
+             FROM information_schema.columns 
+             WHERE table_name = 'rutinaejercicio';`
+        );
+        console.log(reCols.rows);
         
         process.exit(0);
     } catch (err) {

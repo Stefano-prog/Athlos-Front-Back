@@ -45,7 +45,10 @@ const GenerarPlan = () => {
 
         const response = await fetch(`${URL_BACKEND}/api/plans/generate`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify({ perfil }),
         });
         const data = await response.json();

@@ -1,4 +1,4 @@
-import { Pool, QueryResult } from 'pg';
+import { Pool, PoolClient, QueryResult } from 'pg';
 import dotenv from 'dotenv';
 
 
@@ -57,6 +57,22 @@ class Database {
         const duration = Date.now() - start;
         console.log(`Ejecutado: { query: "${text}", duración: ${duration}ms, filas: ${res.rowCount} }`);
         return res;
+    }
+
+    // Transacción: ejecuta el callback en un BEGIN/COMMIT con ROLLBACK automático
+    public async transaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {
+        const client = await this.pool.connect();
+        try {
+            await client.query('BEGIN');
+            const result = await callback(client);
+            await client.query('COMMIT');
+            return result;
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
     }
 }
 
