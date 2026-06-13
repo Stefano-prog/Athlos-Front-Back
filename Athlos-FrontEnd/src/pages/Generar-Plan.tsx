@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { guardarPlan, type PlanEntrenamiento } from "../data/planesLocal";
 
 const URL_BACKEND = import.meta.env.VITE_URL_BACKEND || "http://localhost:3000";
 
@@ -11,6 +10,13 @@ const GenerarPlan = () => {
   const [pasoActual, setPasoActual] = useState(0);
   const [error, setError] = useState("");
   const [intento, setIntento] = useState(0);
+  const [retryAfter, setRetryAfter] = useState(0);
+
+  useEffect(() => {
+    if (retryAfter <= 0) return;
+    const timer = window.setInterval(() => setRetryAfter((seconds) => Math.max(0, seconds - 1)), 1000);
+    return () => window.clearInterval(timer);
+  }, [retryAfter > 0]);
 
   useEffect(() => {
     let activo = true;
@@ -19,6 +25,7 @@ const GenerarPlan = () => {
     const generar = async () => {
       try {
         setError("");
+        setRetryAfter(0);
         const token = localStorage.getItem("athlos_token");
         let perfil = {};
 
@@ -35,7 +42,7 @@ const GenerarPlan = () => {
                 peso: Number(user.peso) || undefined,
                 talla: Number(user.talla) || undefined,
                 edad: Number(user.edad) || undefined,
-                entorno: user.identorno === 2 ? "gimnasio" : user.identorno === 3 ? "aire libre" : "casa",
+                entorno: user.identorno === 3 ? "gimnasio" : user.identorno === 2 ? "aire libre" : "casa",
               };
             }
           } catch {
@@ -52,11 +59,13 @@ const GenerarPlan = () => {
           body: JSON.stringify({ perfil }),
         });
         const data = await response.json();
-        if (!response.ok || !data.success) throw new Error(data.message || "No se pudo generar el plan.");
+        if (!response.ok || !data.success) {
+          if (response.status === 429) setRetryAfter(Number(data.retryAfterSeconds) || 60);
+          throw new Error(data.message || "No se pudo generar el plan.");
+        }
         if (!activo) return;
 
-        const plan = guardarPlan(data.data.plan as Omit<PlanEntrenamiento, "id" | "fechaCreacion">);
-        navigate(`/MisPlanes/${plan.id}`, { replace: true });
+        navigate(`/MisPlanes/${data.data.plan.idplan}`, { replace: true });
       } catch (cause) {
         if (activo) setError(cause instanceof Error ? cause.message : "No se pudo generar el plan.");
       } finally {
@@ -82,7 +91,13 @@ const GenerarPlan = () => {
         {error ? (
           <>
             <div className="alert-glass-error mb-3">{error}</div>
-            <button className="btn glass-btn-primary w-100" onClick={() => { setPasoActual(0); setIntento((value) => value + 1); }}>Intentar nuevamente</button>
+            <button
+              className="btn glass-btn-primary w-100"
+              disabled={retryAfter > 0}
+              onClick={() => { setPasoActual(0); setIntento((value) => value + 1); }}
+            >
+              {retryAfter > 0 ? `Intenta nuevamente en ${retryAfter}s` : "Intentar nuevamente"}
+            </button>
             <button className="btn btn-link text-muted-glass mt-2" onClick={() => navigate("/Menu")}>Volver al menú</button>
           </>
         ) : (

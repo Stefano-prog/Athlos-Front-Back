@@ -7,8 +7,8 @@ type Ambiente = "casa" | "gimnasio" | "aire_libre";
 
 const ENTORNO_ID: Record<Ambiente, number> = {
     casa: 1,
-    gimnasio: 2,
-    aire_libre: 3,
+    gimnasio: 3,
+    aire_libre: 2,
 };
 
 const ENTORNOS: { value: Ambiente; label: string; icono: string }[] = [

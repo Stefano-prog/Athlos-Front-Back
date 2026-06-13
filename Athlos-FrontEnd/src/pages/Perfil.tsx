@@ -16,14 +16,14 @@ interface PerfilData {
 
 const ENTORNO_ID: Record<Ambiente, number> = {
   casa: 1,
-  gimnasio: 2,
-  aire_libre: 3,
+  gimnasio: 3,
+  aire_libre: 2,
 };
 
 const ENTORNO_NOMBRE: Record<number, Ambiente> = {
   1: "casa",
-  2: "gimnasio",
-  3: "aire_libre",
+  2: "aire_libre",
+  3: "gimnasio",
 };
 
 const ENTORNOS: Record<Ambiente, string> = {
