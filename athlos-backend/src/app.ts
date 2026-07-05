@@ -9,7 +9,7 @@ import chatRoutes from './routes/chat.routes';
 import planRoutes from './routes/plan.routes';
 import planAlimenticioRoutes from './routes/planAlimenticio.routes';
 import challengeRoutes from './routes/challenge.routes';
-
+import storeRoutes from './routes/store.routes';
 import { authMiddleware } from './middlewares/auth.middleware';
 
 dotenv.config();
@@ -35,7 +35,7 @@ app.use('/api/user', authMiddleware, userRoutes);
 app.use('/api/plans', authMiddleware, planRoutes);
 app.use('/api/plan-alimenticio', authMiddleware, planAlimenticioRoutes);
 app.use('/api/challenges', authMiddleware, challengeRoutes);
-
+app.use('/api/store', authMiddleware, storeRoutes);
 
 // Arrancar servidor
 app.listen(PORT, () => {
