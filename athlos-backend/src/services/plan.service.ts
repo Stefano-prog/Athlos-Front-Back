@@ -518,7 +518,7 @@ export const generateTrainingPlan = async (userId: string): Promise<SavedPlan> =
   console.log(`[RAG] Usuario: ${user.nombre || userId} | Ejercicios en catalogo: ${catalog.length}`);
 
   // ── FASE 2: Augmented — construir prompt con contexto ──
-  const prompt = buildRAGPrompt(user, catalog);
+  const prompt = buildRAGPrompt(user, catalog, diasEntrenamiento);
 
   // ── FASE 3: Generation — llamar a Gemini ──
   let responseText = '';
@@ -586,6 +586,14 @@ export const generateTrainingPlan = async (userId: string): Promise<SavedPlan> =
   try {
     const catalogIds = new Set(catalog.map((e) => String(e.idejercicio)));
     validatedPlan = validatePlan(parsed, catalogIds);
+    if (validatedPlan.rutinas.length !== diasEntrenamiento.length) {
+      throw new Error('Gemini no devolvió la cantidad de rutinas solicitada');
+    }
+    validatedPlan.diasPorSemana = diasEntrenamiento.length;
+    validatedPlan.rutinas = validatedPlan.rutinas.map((rutina, index) => {
+      const detalle = rutina.nombre.replace(/^D[ií]a\s*\d+\s*[-:–—]?\s*/i, '').replace(/^(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\s*[-:–—]?\s*/i, '');
+      return { ...rutina, nombre: detalle ? `${diasEntrenamiento[index]} - ${detalle}` : diasEntrenamiento[index] };
+    });
     console.log(`[RAG] Plan validado: "${validatedPlan.nombre}" con ${validatedPlan.rutinas.length} rutinas`);
   } catch (error) {
     console.error('--- ERROR DE VALIDACIÓN DEL PLAN GENERADO ---');
