@@ -59,7 +59,10 @@ const MisPlanes = () => {
           {!loading && planes.length > 0 && !seleccionando && (
             <button className="btn plan-delete-button" onClick={() => setSeleccionando(true)}>Eliminar plan</button>
           )}
-            <button className="btn glass-btn-primary" onClick={() => navigate("/GenerarPlan")}>Añadir plan</button>
+          <div className="d-flex gap-2">
+            <button className="btn btn-outline-light" onClick={() => navigate("/CrearPlanManualmente")}>Crear manual</button>
+            <button className="btn glass-btn-primary" onClick={() => navigate("/GenerarPlan")}>Añadir con IA</button>
+          </div>
         </div>
 
         {seleccionando && (
@@ -80,7 +83,10 @@ const MisPlanes = () => {
         {!loading && !error && planes.length === 0 && (
           <div className="glass-card text-center">
             <h4 className="text-white">Todavía no tienes planes</h4>
-            <button className="btn glass-btn-primary mt-2" onClick={() => navigate("/GenerarPlan")}>Generar Plan</button>
+            <div className="d-flex justify-content-center gap-3 mt-3">
+              <button className="btn btn-outline-light" onClick={() => navigate("/CrearPlanManualmente")}>Crear Plan Manual</button>
+              <button className="btn glass-btn-primary" onClick={() => navigate("/GenerarPlan")}>Generar con IA</button>
+            </div>
           </div>
         )}
         {!loading && planes.length > 0 && (

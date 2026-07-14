@@ -5,6 +5,8 @@ import {
   generateTrainingPlan,
   getPlanByIdForUser,
   getPlansByUserId,
+  getAvailableRoutines,
+  createManualPlan,
 } from '../services/plan.service';
 
 export const getPlans = async (req: Request, res: Response) => {
@@ -110,5 +112,46 @@ export const generatePlan = async (req: Request, res: Response) => {
       success: false,
       message: 'No se pudo generar el plan. Intenta nuevamente más tarde.'
     });
+  }
+};
+
+export const getRoutines = async (req: Request, res: Response) => {
+  try {
+    const routines = await getAvailableRoutines();
+    return res.status(200).json({ success: true, data: { routines } });
+  } catch (error) {
+    console.error('Error obteniendo rutinas:', error);
+    return res.status(500).json({ success: false, message: 'No se pudieron obtener las rutinas.' });
+  }
+};
+
+export const createManual = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Usuario no autenticado.' });
+    }
+
+    const { nombreplan, diasSeleccionados } = req.body;
+    if (!nombreplan || !nombreplan.trim()) {
+      return res.status(400).json({ success: false, message: 'El nombre del plan es requerido.' });
+    }
+
+    if (!Array.isArray(diasSeleccionados) || diasSeleccionados.length === 0) {
+      return res.status(400).json({ success: false, message: 'Selecciona al menos una rutina para un día.' });
+    }
+
+    // Validar estructura de diasSeleccionados
+    for (const item of diasSeleccionados) {
+      if (!item.dia || !item.idrutina) {
+        return res.status(400).json({ success: false, message: 'Estructura de días seleccionados inválida.' });
+      }
+    }
+
+    const savedPlan = await createManualPlan(userId, nombreplan, diasSeleccionados);
+    return res.status(201).json({ success: true, data: { plan: savedPlan } });
+  } catch (error) {
+    console.error('Error al crear plan manualmente:', error);
+    return res.status(500).json({ success: false, message: 'No se pudo crear el plan. Intenta nuevamente.' });
   }
 };
