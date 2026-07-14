@@ -20,8 +20,12 @@ import DetallePlan from "./pages/Detalle-Plan";
 import PlanAlimentacion from "./pages/Plan-Alimentacion";
 import Desafios from "./pages/Desafios";
 import Tienda from "./pages/Tienda";
+<<<<<<< Updated upstream
 import Progreso from "./pages/Progreso";
 
+=======
+import CrearPlanManualmente from "./pages/CrearPlanManualmente";
+>>>>>>> Stashed changes
 
 createRoot(document.getElementById("root")!).render(
   <Router>
@@ -47,8 +51,12 @@ createRoot(document.getElementById("root")!).render(
       <Route path="/PlanAlimentacion" element={<PlanAlimentacion />} />
       <Route path="/Desafios" element={<Desafios />} />
       <Route path="/Tienda" element={<Tienda />} />
+<<<<<<< Updated upstream
       <Route path="/Progreso" element={<Progreso />} />
 
+=======
+      <Route path="/CrearPlanManualmente" element={<CrearPlanManualmente />} />
+>>>>>>> Stashed changes
     </Routes>
   </Router>
 );

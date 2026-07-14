@@ -59,6 +59,7 @@ const Tienda = () => {
       const profileRes = await fetch(`${URL_BACKEND}/api/user/profile`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
+      
       const profileData = await profileRes.json();
       if (profileData.success) {
         setPuntos(profileData.data.puntos || 0);

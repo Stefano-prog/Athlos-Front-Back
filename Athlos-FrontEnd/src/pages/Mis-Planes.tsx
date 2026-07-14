@@ -55,13 +55,11 @@ const MisPlanes = () => {
           <button className="btn btn-icon-sm" onClick={() => navigate("/Menu")} title="Volver al menú">←</button>
           <div className="flex-grow-1">
             <h2 className="fw-bold page-title mb-0">Mis Planes</h2>
-            <p className="text-muted-glass mb-0">
-              {seleccionando ? `${seleccionados.length} seleccionados` : "Guardados en PostgreSQL"}
-            </p>
           </div>
           {!loading && planes.length > 0 && !seleccionando && (
             <button className="btn plan-delete-button" onClick={() => setSeleccionando(true)}>Eliminar plan</button>
           )}
+            <button className="btn glass-btn-primary" onClick={() => navigate("/GenerarPlan")}>Añadir plan</button>
         </div>
 
         {seleccionando && (
