@@ -619,72 +619,20 @@ export const generateTrainingPlan = async (userId: string, diasEntrenamiento: st
   }
 };
 
-export interface AvailableRoutine {
-  idrutina: number;
+export interface ManualRoutineInput {
   nombre: string;
   duracion: number;
   ejercicios: Array<{
     idejercicio: number;
-    nombre: string;
-    descripcion: string;
-    link: string;
     series: number;
     repeticiones: number;
   }>;
 }
 
-export const getAvailableRoutines = async (): Promise<AvailableRoutine[]> => {
-  const result = await db.query(
-    `WITH unique_routines AS (
-      SELECT DISTINCT ON (nombre) idrutina, nombre, duracion
-      FROM rutina
-      ORDER BY nombre, idrutina
-    )
-    SELECT 
-      ur.idrutina,
-      ur.nombre AS "rutinaNombre",
-      ur.duracion AS "rutinaDuracion",
-      e.idejercicio,
-      e.nombre AS "ejercicioNombre",
-      COALESCE(e.descripcion, '') AS descripcion,
-      COALESCE(e.link, '') AS link,
-      re.series,
-      re.repeticiones
-    FROM unique_routines ur
-    LEFT JOIN rutinaejercicio re ON ur.idrutina = re.idrutina
-    LEFT JOIN ejercicio e ON e.idejercicio = re.idejercicio
-    ORDER BY ur.nombre, e.idejercicio`
-  );
-
-  const routinesMap = new Map<number, AvailableRoutine>();
-  for (const row of result.rows) {
-    if (!routinesMap.has(row.idrutina)) {
-      routinesMap.set(row.idrutina, {
-        idrutina: row.idrutina,
-        nombre: row.rutinaNombre,
-        duracion: row.rutinaDuracion || 0,
-        ejercicios: [],
-      });
-    }
-    if (row.idejercicio) {
-      routinesMap.get(row.idrutina)!.ejercicios.push({
-        idejercicio: row.idejercicio,
-        nombre: row.ejercicioNombre,
-        descripcion: row.descripcion,
-        link: row.link,
-        series: row.series,
-        repeticiones: row.repeticiones,
-      });
-    }
-  }
-
-  return Array.from(routinesMap.values());
-};
-
 export const createManualPlan = async (
   userId: number,
   nombrePlan: string,
-  diasSeleccionados: Array<{ dia: string; idrutina: number }>
+  rutinasInput: ManualRoutineInput[]
 ): Promise<SavedPlan> => {
   return db.transaction(async (client) => {
     // 1. Insertar el plan. duracionSemanas por defecto es 4.
@@ -699,74 +647,49 @@ export const createManualPlan = async (
 
     const rutinas: SavedRutina[] = [];
 
-    // Por cada día seleccionado, copiamos la rutina pre-existente
-    for (const item of diasSeleccionados) {
-      const originalRoutineRes = await client.query<{ nombre: string; duracion: number }>(
-        `SELECT nombre, duracion FROM rutina WHERE idrutina = $1`,
-        [item.idrutina]
-      );
-      if (originalRoutineRes.rowCount === 0) {
-        throw new Error(`La rutina con ID ${item.idrutina} no existe.`);
-      }
-      const originalRoutine = originalRoutineRes.rows[0];
-
-      // Formatear el nombre de la rutina para incluir el día
-      const cleanDay = item.dia.trim();
-      const detail = originalRoutine.nombre
-        .replace(/^D[ií]a\s*\d+\s*[-:–—]?\s*/i, '')
-        .replace(/^(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\s*[-:–—]?\s*/i, '');
-      const newRoutineName = detail ? `${cleanDay} - ${detail}` : `${cleanDay} - ${originalRoutine.nombre}`;
-
+    // 2. Insertar cada rutina
+    for (const rInput of rutinasInput) {
       const routineResult = await client.query(
         `INSERT INTO rutina (idplan, nombre, duracion, estado)
          VALUES ($1, $2, $3, $4)
          RETURNING idrutina`,
-        [idplan, newRoutineName, originalRoutine.duracion, 'Pendiente']
+        [idplan, rInput.nombre, rInput.duracion, 'Pendiente']
       );
       const idrutina: number = routineResult.rows[0].idrutina;
-      console.log(`[TX Manual]   Rutina insertada: idrutina=${idrutina} → "${newRoutineName}"`);
+      console.log(`[TX Manual]   Rutina insertada: idrutina=${idrutina} → "${rInput.nombre}"`);
 
-      // Copiar ejercicios asociados a la rutina
-      await client.query(
-        `INSERT INTO rutinaejercicio (idrutina, idejercicio, series, repeticiones)
-         SELECT $1, idejercicio, series, repeticiones
-         FROM rutinaejercicio
-         WHERE idrutina = $2`,
-        [idrutina, item.idrutina]
-      );
+      const ejercicios: SavedExercise[] = [];
 
-      // Obtener los ejercicios insertados para la respuesta
-      const exercisesRes = await client.query<{
-        idejercicio: number;
-        nombre: string;
-        series: number;
-        repeticiones: number;
-      }>(
-        `SELECT 
-           re.idejercicio,
-           e.nombre,
-           re.series,
-           re.repeticiones
-         FROM rutinaejercicio re
-         JOIN ejercicio e ON e.idejercicio = re.idejercicio
-         WHERE re.idrutina = $1`,
-        [idrutina]
-      );
+      // 3. Insertar los ejercicios de la rutina
+      for (const exInput of rInput.ejercicios) {
+        await client.query(
+          `INSERT INTO rutinaejercicio (idrutina, idejercicio, series, repeticiones)
+           VALUES ($1, $2, $3, $4)`,
+          [idrutina, exInput.idejercicio, exInput.series, exInput.repeticiones]
+        );
 
-      const ejercicios: SavedExercise[] = exercisesRes.rows.map((row) => ({
-        idejercicio: row.idejercicio,
-        nombre: row.nombre,
-        tipo: 'fuerza',
-        series: row.series,
-        repeticiones: row.repeticiones,
-        descansoSegundos: 60,
-        instrucciones: '',
-      }));
+        // Consultar el nombre del ejercicio del catálogo
+        const exNameResult = await client.query<{ nombre: string }>(
+          `SELECT nombre FROM ejercicio WHERE idejercicio = $1`,
+          [exInput.idejercicio]
+        );
+        const nombreEjercicio = exNameResult.rows[0]?.nombre || 'Ejercicio';
+
+        ejercicios.push({
+          idejercicio: exInput.idejercicio,
+          nombre: nombreEjercicio,
+          tipo: 'fuerza',
+          series: exInput.series,
+          repeticiones: exInput.repeticiones,
+          descansoSegundos: 60,
+          instrucciones: '',
+        });
+      }
 
       rutinas.push({
         idrutina,
-        nombre: newRoutineName,
-        duracion: originalRoutine.duracion || 0,
+        nombre: rInput.nombre,
+        duracion: rInput.duracion,
         estado: 'Pendiente',
         ejercicios,
       });

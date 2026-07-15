@@ -12,6 +12,7 @@ import challengeRoutes from './routes/challenge.routes';
 import storeRoutes from './routes/store.routes';
 import { authMiddleware } from './middlewares/auth.middleware';
 import rankingRoutes from './routes/ranking.routes';
+import exerciseRoutes from './routes/exercise.routes';
 
 
 dotenv.config();
@@ -40,6 +41,7 @@ app.use('/api/plans', authMiddleware, planRoutes);
 app.use('/api/plan-alimenticio', authMiddleware, planAlimenticioRoutes);
 app.use('/api/challenges', authMiddleware, challengeRoutes);
 app.use('/api/store', authMiddleware, storeRoutes);
+app.use('/api/exercises', authMiddleware, exerciseRoutes);
 
 // Arrancar servidor
 app.listen(PORT, () => {

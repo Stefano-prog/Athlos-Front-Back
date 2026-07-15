@@ -5,8 +5,8 @@ import {
   generateTrainingPlan,
   getPlanByIdForUser,
   getPlansByUserId,
-  getAvailableRoutines,
   createManualPlan,
+  ManualRoutineInput,
 } from '../services/plan.service';
 
 export const getPlans = async (req: Request, res: Response) => {
@@ -115,16 +115,6 @@ export const generatePlan = async (req: Request, res: Response) => {
   }
 };
 
-export const getRoutines = async (req: Request, res: Response) => {
-  try {
-    const routines = await getAvailableRoutines();
-    return res.status(200).json({ success: true, data: { routines } });
-  } catch (error) {
-    console.error('Error obteniendo rutinas:', error);
-    return res.status(500).json({ success: false, message: 'No se pudieron obtener las rutinas.' });
-  }
-};
-
 export const createManual = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -132,23 +122,36 @@ export const createManual = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: 'Usuario no autenticado.' });
     }
 
-    const { nombreplan, diasSeleccionados } = req.body;
+    const { nombreplan, rutinas } = req.body;
     if (!nombreplan || !nombreplan.trim()) {
       return res.status(400).json({ success: false, message: 'El nombre del plan es requerido.' });
     }
 
-    if (!Array.isArray(diasSeleccionados) || diasSeleccionados.length === 0) {
-      return res.status(400).json({ success: false, message: 'Selecciona al menos una rutina para un día.' });
+    if (!Array.isArray(rutinas) || rutinas.length === 0) {
+      return res.status(400).json({ success: false, message: 'El plan debe contener al menos una rutina.' });
     }
 
-    // Validar estructura de diasSeleccionados
-    for (const item of diasSeleccionados) {
-      if (!item.dia || !item.idrutina) {
-        return res.status(400).json({ success: false, message: 'Estructura de días seleccionados inválida.' });
+    // Validar estructura de las rutinas y ejercicios
+    for (const r of rutinas) {
+      if (!r.nombre || !r.nombre.trim() || typeof r.duracion !== 'number' || r.duracion <= 0) {
+        return res.status(400).json({ success: false, message: 'Estructura de rutina inválida. Asegúrate de poner nombre y duración mayor a 0.' });
+      }
+
+      if (!Array.isArray(r.ejercicios) || r.ejercicios.length === 0) {
+        return res.status(400).json({ success: false, message: `La rutina "${r.nombre}" debe tener al menos un ejercicio.` });
+      }
+
+      for (const ex of r.ejercicios) {
+        if (typeof ex.idejercicio !== 'number' || typeof ex.series !== 'number' || typeof ex.repeticiones !== 'number') {
+          return res.status(400).json({ success: false, message: 'Estructura de ejercicio inválida.' });
+        }
+        if (ex.series <= 0 || ex.repeticiones <= 0) {
+          return res.status(400).json({ success: false, message: 'Las series y repeticiones deben ser mayores a 0.' });
+        }
       }
     }
 
-    const savedPlan = await createManualPlan(userId, nombreplan, diasSeleccionados);
+    const savedPlan = await createManualPlan(userId, nombreplan, rutinas as ManualRoutineInput[]);
     return res.status(201).json({ success: true, data: { plan: savedPlan } });
   } catch (error) {
     console.error('Error al crear plan manualmente:', error);
