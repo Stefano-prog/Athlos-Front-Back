@@ -9,9 +9,7 @@ export class GeminiQuotaError extends Error {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  Interfaces: Respuesta de Gemini (lo que la IA devuelve)
-// ══════════════════════════════════════════════════════════════════════
+
 
 export interface GeminiExercise {
   id: string;          // idejercicio del catálogo, como string
@@ -37,9 +35,7 @@ export interface GeminiPlan {
   rutinas: GeminiRutina[];
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  Interfaces: Respuesta al Frontend (enriquecida con IDs de la BD)
-// ══════════════════════════════════════════════════════════════════════
+
 
 export interface SavedExercise {
   idejercicio: number;
