@@ -21,7 +21,7 @@ import PlanAlimentacion from "./pages/Plan-Alimentacion";
 import Desafios from "./pages/Desafios";
 import Tienda from "./pages/Tienda";
 import Progreso from "./pages/Progreso";
-
+import CrearPlanManualmente from "./pages/CrearPlanManualmente";
 
 createRoot(document.getElementById("root")!).render(
   <Router>
@@ -48,7 +48,7 @@ createRoot(document.getElementById("root")!).render(
       <Route path="/Desafios" element={<Desafios />} />
       <Route path="/Tienda" element={<Tienda />} />
       <Route path="/Progreso" element={<Progreso />} />
-
+      <Route path="/CrearPlanManualmente" element={<CrearPlanManualmente />} />
     </Routes>
   </Router>
 );
