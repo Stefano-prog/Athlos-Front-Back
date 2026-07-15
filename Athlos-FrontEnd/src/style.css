@@ -1457,3 +1457,111 @@ body {
   font-size: 1.4rem;
   line-height: 1;
 }
+
+/* Tienda Extra Styles */
+.tienda-header-subtitle {
+  font-size: 0.82rem;
+}
+
+.tienda-card-title {
+  font-size: 1.05rem;
+}
+
+.tienda-card--disabled {
+  opacity: 0.7;
+}
+
+.tienda-limit-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+}
+
+.tienda-limit-badge--reached {
+  background: rgba(220, 53, 69, 0.2);
+  color: #ff6b6b;
+}
+
+.tienda-ver-mas {
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.tienda-history-date {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+
+.tienda-img-wrapper-xs {
+  width: 100%;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.tienda-code-wrapper {
+  background: rgba(116, 195, 210, 0.08);
+  border-radius: 8px;
+  border: 1px dashed rgba(116, 195, 210, 0.3);
+}
+
+.tienda-code-label {
+  font-size: 0.75rem;
+}
+
+.tienda-code-value {
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+}
+
+.tienda-terms-wrapper {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tienda-terms-title {
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tienda-terms-text {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.tienda-info-text {
+  font-size: 0.8rem;
+}
+
+.tienda-info-text--danger {
+  color: #ff6b6b;
+}
+
+.tienda-celebrate-emoji {
+  font-size: 3.5rem;
+  margin-bottom: 12px;
+}
+
+.tienda-celebrate-text {
+  font-size: 1.1rem;
+}
+
+.tienda-celebrate-subtext {
+  font-size: 0.9rem;
+}
+
+.tienda-celebrate-code-box {
+  background: rgba(116, 195, 210, 0.15);
+  border: 2px dashed #74C3D2;
+  border-radius: 10px;
+}
+
+.tienda-celebrate-code {
+  color: #74C3D2;
+  letter-spacing: 2px;
+}
