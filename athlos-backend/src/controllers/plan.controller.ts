@@ -63,7 +63,7 @@ export const deletePlans = async (req: Request, res: Response) => {
 
 export const generatePlan = async (req: Request, res: Response) => {
   try {
-    // req.user.id viene del authMiddleware (JWT payload: { id: number })
+
     const userId = req.user?.id;
 
     if (!userId) {
@@ -92,14 +92,14 @@ export const generatePlan = async (req: Request, res: Response) => {
 
     console.log(`[Plan Controller] userId extraido del JWT: ${userId}`);
 
-    // Genera el plan con IA (RAG) y lo persiste en la BD transaccionalmente
+  
     const savedPlan = await generateTrainingPlan(String(userId), diasOrdenados);
 
     // Devuelve el plan con los IDs generados por la BD (idplan, idrutina)
     return res.status(201).json({ success: true, data: { plan: savedPlan } });
   } catch (error) {
     console.error("--- ERROR CRÍTICO EN GENERATE PLAN ---");
-    console.error(error); // Esto expondrá la línea exacta en la consola del backend
+    console.error(error); 
     if (error instanceof GeminiQuotaError) {
       return res.status(429).json({
         success: false,

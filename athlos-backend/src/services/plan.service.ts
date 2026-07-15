@@ -220,9 +220,7 @@ export const deletePlansByUserId = async (
   });
 };
 
-// ══════════════════════════════════════════════════════════════════════
-//  Schema de Gemini (con rutinas → ejercicios)
-// ══════════════════════════════════════════════════════════════════════
+
 
 const GEMINI_MODEL_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
@@ -267,9 +265,7 @@ const planSchema = {
   },
 };
 
-// ══════════════════════════════════════════════════════════════════════
-//  Sanitizador de respuesta de Gemini
-// ══════════════════════════════════════════════════════════════════════
+
 
 const parseGeminiResponse = (rawText: string): unknown => {
   try {
@@ -282,9 +278,7 @@ const parseGeminiResponse = (rawText: string): unknown => {
   }
 };
 
-// ══════════════════════════════════════════════════════════════════════
-//  Helpers de validación
-// ══════════════════════════════════════════════════════════════════════
+
 
 const toNumber = (value: unknown, min: number, max: number, fieldName: string): number => {
   const number = Number(value);
@@ -337,7 +331,7 @@ const validatePlan = (
       const rawId = item.id ?? item.idEjercicio ?? item.idejercicio ?? item.id_ejercicio;
       const id = text(rawId, `el id del ejercicio ${eIdx + 1} de la rutina "${rutinaNombre || rIdx + 1}"`);
 
-      // ── Validación RAG: el ID debe existir en el catálogo real ──
+    
       if (!catalogIds.has(id)) {
         throw new Error(
           `Gemini devolvio el ejercicio "${item.nombre || item.name || ''}" con ID ${id} que NO existe en el catalogo.`
@@ -378,9 +372,6 @@ const validatePlan = (
   };
 };
 
-// ══════════════════════════════════════════════════════════════════════
-//  Prompt RAG (fase Augmented)
-// ══════════════════════════════════════════════════════════════════════
 
 const buildRAGPrompt = (
   user: UserProfile,
@@ -427,9 +418,7 @@ REGLAS PARA EJERCICIOS:
 IMPORTANTE: Devuelve estrictamente el JSON sin texto adicional, sin saludos y sin bloques de codigo Markdown.`;
 };
 
-// ══════════════════════════════════════════════════════════════════════
-//  Persistencia transaccional en PostgreSQL
-// ══════════════════════════════════════════════════════════════════════
+
 
 const savePlanToDatabase = async (
   userId: number,
@@ -503,15 +492,13 @@ const savePlanToDatabase = async (
   });
 };
 
-// ══════════════════════════════════════════════════════════════════════
-//  Función principal: generateTrainingPlan (RAG + Persistencia)
-// ══════════════════════════════════════════════════════════════════════
+
 
 export const generateTrainingPlan = async (userId: string, diasEntrenamiento: string[]): Promise<SavedPlan> => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === 'TU_API_KEY_AQUI') throw new Error('GEMINI_API_KEY no esta configurada');
 
-  // ── FASE 1: Retrieval — consultar BD ──
+
   const [user, catalog] = await Promise.all([
     getUserProfileById(userId),
     getExerciseCatalogForPlan(),
@@ -523,10 +510,8 @@ export const generateTrainingPlan = async (userId: string, diasEntrenamiento: st
 
   console.log(`[RAG] Usuario: ${user.nombre || userId} | Ejercicios en catalogo: ${catalog.length}`);
 
-  // ── FASE 2: Augmented — construir prompt con contexto ──
   const prompt = buildRAGPrompt(user, catalog, diasEntrenamiento);
 
-  // ── FASE 3: Generation — llamar a Gemini ──
   let responseText = '';
   try {
     const response = await fetch(`${GEMINI_MODEL_URL}?key=${apiKey}`, {
@@ -576,7 +561,7 @@ export const generateTrainingPlan = async (userId: string, diasEntrenamiento: st
     throw error;
   }
 
-  // ── Sanitizar y parsear respuesta ──
+
   let parsed: unknown;
   try {
     parsed = parseGeminiResponse(responseText);
@@ -587,7 +572,6 @@ export const generateTrainingPlan = async (userId: string, diasEntrenamiento: st
     throw error;
   }
 
-  // ── Validación RAG post-generación ──
   let validatedPlan: GeminiPlan;
   try {
     const catalogIds = new Set(catalog.map((e) => String(e.idejercicio)));
@@ -608,7 +592,6 @@ export const generateTrainingPlan = async (userId: string, diasEntrenamiento: st
     throw error;
   }
 
-  // ── FASE 4: Persistencia transaccional ──
   try {
     const savedPlan = await savePlanToDatabase(Number(userId), validatedPlan);
     return savedPlan;
@@ -635,7 +618,7 @@ export const createManualPlan = async (
   rutinasInput: ManualRoutineInput[]
 ): Promise<SavedPlan> => {
   return db.transaction(async (client) => {
-    // 1. Insertar el plan. duracionSemanas por defecto es 4.
+
     const planResult = await client.query(
       `INSERT INTO plan (idusuario, nombreplan, duracion)
        VALUES ($1, $2, $3)
@@ -647,7 +630,6 @@ export const createManualPlan = async (
 
     const rutinas: SavedRutina[] = [];
 
-    // 2. Insertar cada rutina
     for (const rInput of rutinasInput) {
       const routineResult = await client.query(
         `INSERT INTO rutina (idplan, nombre, duracion, estado)
@@ -660,7 +642,6 @@ export const createManualPlan = async (
 
       const ejercicios: SavedExercise[] = [];
 
-      // 3. Insertar los ejercicios de la rutina
       for (const exInput of rInput.ejercicios) {
         await client.query(
           `INSERT INTO rutinaejercicio (idrutina, idejercicio, series, repeticiones)
